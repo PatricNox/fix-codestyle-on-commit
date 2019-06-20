@@ -1,5 +1,5 @@
-# fix-codestyle-on-commit
-Runs phpcs on commit, if needed.
+# Check codestyle on commit
+Runs phpcs on commit, stopping it from becoming a commit incase there's code that doesn't follow the coding standard.
 
 [![Open Source Love](https://badges.frapsoft.com/os/mit/mit.svg?v=102)](https://github.com/PatricNox/fix-codestyle-on-commit)
 
@@ -11,43 +11,27 @@ Runs phpcs on commit, if needed.
 * [PHPCS](https://github.com/squizlabs/PHP_CodeSniffer)
 
 # Setup
-## File structure
-
+## Git hooks
 ```
 [ROOT]
   vendor/
-             .....
              .....
   _ORGANISATION/
              pre-commit
   _scripts/
              phpcs-fix-on-commit.sh
+  .git
+            .....
+	    hooks/pre-commit
+            ....
   composer.json
   composer.lock
   readme.md
 
 ```
 
-> **In file**: _composer.json_
 
-```
-  ],
-    "post-install-cmd": [
-      "bash _scripts/phpcs-fix-on-commit.sh"
-  ]
-```
-
-> **In file**: _phpcs-fix-on-commit.sh_
-
-```
-  #!/bin/sh
-
-  cp _ORGANISATION/pre-commit ../.git/hooks/pre-commit
-  chmod +x ../.git/hooks/pre-commit
-
-```
-
-> **In file**: _pre-commit_
+> **In file**: _.git/hooks/pre-commit_
 
 ```
 #!/bin/sh
@@ -72,26 +56,22 @@ do
 	FILES="$FILES $THIS_PROJECT/$FILE"
 done
 
-# Run phpcbf on all files, if we got staged files.
+# Run phpcs on all files, if we got staged files.
 if [ "$FILES" != "" ]
 then
-    # Check if there's something to fix before fixing.
-	src/vendor/bin/phpcs --standard="PSR2" --encoding=utf-8 -n -p $FILES
+    # Check the staged files for code standard.
+    src/vendor/bin/phpcs --standard="PSR2" --encoding=utf-8 -n -p $FILES
     if [ $? != 0 ]
     then
         # We got something to fix.
         echo "_______________"
-        echo "Fixing code standard with phpcs."
+        echo "Found staged file(s) that doesn't follow the coding standard."
         echo "_______________"
-        src/vendor/bin/phpcbf --standard="PSR2" --encoding=utf-8 -n -p $FILES
-        if [ $? == 0 ]
-        then
-            echo "Could not fix errors, please fix the error before committing."
-            exit 1
-        else
-            # Stage fixed files.
-            git add $FILES
-        fi
+	exit 1
+    fi
+    else
+        # Make them committable.
+        git add $FILES
     fi
 fi
 
