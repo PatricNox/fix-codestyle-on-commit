@@ -12,30 +12,20 @@ Runs phpcs on commit, stopping it from becoming a commit incase there's code tha
 
 # Setup
 ## Git hooks
-```
-[ROOT]
-  vendor/
-             .....
-  _ORGANISATION/
-             pre-commit
-  _scripts/
-             phpcs-fix-on-commit.sh
-  .git
-            .....
-	    hooks/pre-commit
-            ....
-  composer.json
-  composer.lock
-  readme.md
 
-```
+Edit `PHPCS_PATH` to the correct path, if applicable.
 
+In this example, I have a docker setup which serves the application from _/laravel_.
 
 > **In file**: _.git/hooks/pre-commit_
 
 ```
 #!/bin/sh
 
+# PHPCS Path (Edit if applicable)
+PHPCS_PATH='laravel/vendor/bin/phpcs'
+
+# Project path, no need to edit.
 THIS_PROJECT=`php -r "echo dirname(dirname(dirname(realpath('$0'))));"`
 GIT_STAGED_FILES=`git diff --cached --name-only --diff-filter=ACMR HEAD | grep \\\\.php`
 
@@ -60,7 +50,7 @@ done
 if [ "$FILES" != "" ]
 then
     # Check the staged files for code standard.
-    src/vendor/bin/phpcs --standard="PSR2" --encoding=utf-8 -n -p $FILES
+    $PHPCS_PATH --standard="PSR2" --encoding=utf-8 -n -p $FILES
     if [ $? != 0 ]
     then
         # We got something to fix.
